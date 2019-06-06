@@ -25,9 +25,6 @@ typedef struct
 	unsigned char devEui[8];
 } deviceInfo ;
 
-
-// variables globales
-
 /*!
  *	Descripteur de fichier du bus i2c
  */
@@ -36,12 +33,12 @@ int file_i2c;
 /*!
  *	Descripteur de fichier du fichier de log du device
  */
-FILE *file_csv_current;
+FILE *file_csv;
 
 /*!
  *	Label du fichier de log du device
  */
-char filename_csv_current[50] = { 0 };
+char filename_csv[50] = { 0 };
 
 /*!
  *	Buffers de reception
@@ -77,8 +74,8 @@ bool emptyDevEui(deviceInfo di);
 deviceInfo devEuiCpy(char *str);
 
 /*!
- * 	@brief       Permet de créer le nom du fichier de log courant
- * 	@retval      void
+ * 	@brief	Permet de créer le nom du fichier de log courant
+ * 	@retval void
  */
 void createDevEuiFilename();
 
@@ -89,16 +86,16 @@ int main(int argc, char **argv)
   	char date[20];
 
 	//----- OPEN THE I2C BUS -----
-	char *filename = (char *)"/dev/i2c-1";
-	if ((file_i2c = open(filename, O_RDWR)) < 0)
+	char *filename_i2c = (char *)"/dev/i2c-1";
+	if ((file_i2c = open(filename_i2c, O_RDWR)) < 0)
 	{
 		//ERROR HANDLING: you can check errno to see what went wrong
 		fprintf(stderr, "Error open : (errno %d) %s\r\n",errno, strerror(errno));
 		return EXIT_FAILURE;
 	}
 
-	int current_addr = 0x08;
-	if (ioctl(file_i2c, I2C_SLAVE, current_addr) < 0)
+	int slave_addr = 0x08;
+	if (ioctl(file_i2c, I2C_SLAVE, slave_addr) < 0)
 	{
 		fprintf(stderr, "Error ioctl : (errno %d) %s\r\n",errno, strerror(errno));
 		return EXIT_FAILURE;
@@ -119,7 +116,7 @@ int main(int argc, char **argv)
 					{
 						//on remplit la structure du device
 						devInfo = devEuiCpy(str_buffer);
-						devInfo.i2cAddr = current_addr;
+						devInfo.i2cAddr = slave_addr;
 					}
 				}
 				else
@@ -127,7 +124,7 @@ int main(int argc, char **argv)
 					//on crée une nom de fichier en fonction du devEui
 					createDevEuiFilename();
 
-					if ((file_csv_current = fopen(filename_csv_current, "a")) < 0)
+					if ((file_csv = fopen(filename_csv, "a")) < 0)
 					{
 						fprintf(stderr, "Error open : (errno %d) %s\r\n",errno, strerror(errno));
 						return EXIT_FAILURE;
@@ -135,8 +132,8 @@ int main(int argc, char **argv)
 					else
 					{
 						//on vérifie si le fichier est vide
-						if(ftell(file_csv_current) == 0)
-							fprintf(file_csv_current,"Timestamp; MiddleBoard Address; Log\r\n");
+						if(ftell(file_csv) == 0)
+							fprintf(file_csv,"Timestamp; MiddleBoard Address; Log\r\n");
 						
 						//on génère le timestamp
 						time(&t);
@@ -144,12 +141,12 @@ int main(int argc, char **argv)
 
 						//on écrit dans le fichier de log
 #if DEBUG == 1
-						fprintf(stdout,"%s; 0x%02X; %s\r\n",date,current_addr,str_buffer);
+						fprintf(stdout,"%s; 0x%02X; %s\r\n",date,slave_addr,str_buffer);
 #endif
-						fprintf(file_csv_current,"%s; 0x%02X; %s\r\n",date,current_addr,str_buffer);
+						fprintf(file_csv,"%s; 0x%02X; %s\r\n",date,slave_addr,str_buffer);
 
 						//fermeture du fichier de log
-						fclose(file_csv_current);
+						fclose(file_csv);
 					}
 				}
 				memset( str_buffer, '\0', sizeof(char) * MAX_BUFFER_SIZE );	
@@ -243,6 +240,6 @@ deviceInfo devEuiCpy(char *str)
 
 void createDevEuiFilename()
 {
-        sprintf(filename_csv_current,"./logs/devices/%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X_logs.csv",devInfo.devEui[0],devInfo.devEui[1],devInfo.devEui[2],devInfo.devEui[3],devInfo.devEui[4],devInfo.devEui[5],devInfo.devEui[6],devInfo.devEui[7]);
+    sprintf(filename_csv,"./logs/devices/%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X_logs.csv",devInfo.devEui[0],devInfo.devEui[1],devInfo.devEui[2],devInfo.devEui[3],devInfo.devEui[4],devInfo.devEui[5],devInfo.devEui[6],devInfo.devEui[7]);
 }
 

@@ -1,7 +1,7 @@
 #include <unistd.h>             //Needed for I2C port
 #include <fcntl.h>              //Needed for I2C port
-//#include <sys/ioctl.h>          //Needed for I2C port
-//#include <linux/i2c-dev.h>      //Needed for I2C port
+#include <sys/ioctl.h>          //Needed for I2C port
+#include <linux/i2c-dev.h>      //Needed for I2C port
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +15,11 @@
 #define NB_MB_UART_PORT         1
 #define MAX_STR_SIZE            100
 
-//typedefs
+/*!
+ *	Structure définissant diverses informations concernants un capteur à savoir :
+ *	- l'adresse i2c de la middle Board qui fait l'intermédiaire avec la rpi
+ * 	- son devEui
+ */
 typedef struct 
 {
     int i2cAddr;
@@ -23,36 +27,74 @@ typedef struct
 } deviceInfo ;
 
 
-//variables
-
+/*!
+ *	Descripteur de fichier du bus i2c
+ */
 int file_i2c;
+
+/*!
+ *	Descripteur de fichier du fichier de log du device
+ */
 FILE *file_csv_current;
 
+/*!
+ *	Label du fichier de log du device
+ */
+char filename_csv_current[50] = { 0 };
+
+/*!
+ *  Tableau contenant les informations des différents capteurs
+ */
 deviceInfo devInfArr[NB_MIDDLE_BOARD][NB_MB_UART_PORT] = { 0 };
 
-char buffer = 0;
-char str_buff[MAX_STR_SIZE];
-char filename_csv_current[32] = { 0 };
+/*!
+ *	Buffers de reception
+ */
+char rx_buffer = 0;
+char str_buffer[MAX_STR_SIZE];
 
-int current_addr = 0;       //current i2c addr
+/*!
+ *  Tableau contenant les adresses i2c des boards intermédiaires
+ */
 int devices_addr[] = {
     0x08
     //Devices addr here
 };
+/*!
+ *  Index pour le parcours des boards intermédiaires
+ */
 int index_mb;
+/*!
+ *  Index pour le parcours des capteurs
+ */
 int index_s;
 
-//permet de reconnaitre un devEui
-bool is_dev_eui(char *str);
+/*!
+ *  @brief  Analyse des différents charactères des données de la trame pour reconnaitre ou non le DevEui
+ *  @param  str      chaine de charactères à analyser
+ *  @retval boolean
+ */
+bool isDevEui(char *str);
 
-//vérifie si le devEui courant est non initialisé
-bool empty_dev_eui(deviceInfo di);
+/*!
+ *  @brief  Analyse de l'élément devEui de la structure di afin de savcoir s'il est vide ou non
+ *  @param  di      structure de type deviceInfo à analyser
+ *  @retval boolean
+ */
+bool emptyDevEui(deviceInfo di);
 
-//Copie le dev Eui contenant dans la chaine str dans l'élement devEui de la structure deviceInfo
-deviceInfo dev_eui_cpy(char *str);
+/*!
+ *  @brief  Permet de récuperer le devEui contenu dans la chaine str et de le formater une structure de type deviceInfo
+ *  @param  str      chaine de charactères à copier
+ *  @retval deviceInfo
+ */
+deviceInfo devEuiCpy(char *str);
 
-//permet de créer une chaine de charactere contenant le chemin d'accès au fichier csv courant
-void create_deveui_filename();
+/*!
+ * 	@brief  Permet de créer le nom du fichier de log courant
+ * 	@retval void
+ */
+void createDevEuiFilename();
 
 int main(int argc, char **argv)
 {
@@ -68,7 +110,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        current_addr = 0x00; //<<<<<The I2C address of the slave
+        int current_addr = 0x00;       //current i2c addr
         while (true)
         {       
             //communicate with middle boards
@@ -88,13 +130,16 @@ int main(int argc, char **argv)
                     while(true)
                     {
                         //----- READ DATA -----
-                        if (read(file_i2c, &buffer, 1) > 0)
+                        if (read(file_i2c, &rx_buffer, 1) > 0)
                         {
-                            if(buffer != '\r')
-                                strncat(str_buff, &buffer, 1);
+                            if(rx_buffer == '\r' || rx_buffer == '\n')
+                            {
+
+                            }
                             else
-                                break;       
-                                        
+                            {
+
+                            }                                            
                         }
                         else
                         {
@@ -102,41 +147,6 @@ int main(int argc, char **argv)
                             fprintf(stderr, "Error read : (errno %d) %s\r\n",errno, strerror(errno));
                             break;
                         }
-                    }
-            
-
-                    if(empty_dev_eui(devInfArr[index_mb][index_s]))
-                    {
-                        if( is_dev_eui(str_buff) )
-                        {
-                            devInfArr[index_mb][index_s] = dev_eui_cpy(str_buff); 
-                            devInfArr[index_mb][index_s].i2cAddr = current_addr;
-                        }
-                    }
-
-            
-                    //print into csv
-                    create_deveui_filename();
-
-                    if ((file_csv_current = fopen(filename_csv_current, "a+")) < 0)
-                    {
-                        fprintf(stderr, "Error open : (errno %d) %s\r\n",errno, strerror(errno));
-                        return EXIT_FAILURE;
-                    }
-                    else
-                    {
-                        //vérifie si le fichier est vide
-                        fseek(file_csv_current,0,SEEK_END);
-                        if(ftell(file_csv_current) == 0)
-                                fprintf(file_csv_current,"Timestamp; Middle Board Address; Data\n");
-                        //generate timestamp
-                        time(&t);
-                        strftime(date,sizeof(date),"%d/%m/%Y %H:%M:%S",localtime(&t));
-
-                        fprintf(file_csv_current,"%s; 0x%02X; %s",date,current_addr,str_buff);
-
-                        memset( str_buff, '\0', sizeof(char) * MAX_STR_SIZE );
-                        fclose(file_csv_current);
                     }
                 }
             }
@@ -151,85 +161,88 @@ int main(int argc, char **argv)
  *  @param  str      chaine de charactères à analyser
  *  @retval boolean
  */
-bool is_dev_eui(char *str)
+bool isDevEui(char *str)
 {
-    bool ret = false;
-
-    if ((strlen(str) - 1) >= 37)
-    {
-        for (int i = 15, k = i + 2; i < 37; i++)
-        {
-            if (k != i)
-            {
-                if (isxdigit(str[i]))
-                ret = true;
-                else
-                ret = false;
-            }
-            else
-            {
-                k += 3;
-            }
-        }
-    }
-    return ret;
+  bool ret = false;
+  int j = 0;
+	//on attend de rencontrer le premier caractère hexadecimal de str
+	while( !isxdigit(str[j]) )
+	{
+		j++;
+		if( j > (strlen(str)-1) )			//si j est supérieur à l'index du dernier élément de str
+			return false;					//et qu'on n'a toujours pas rencontré de caractère hexadecimal on retourne faux
+	}
+		if(strlen(str) >= j+22)
+		{
+			for (int i = j, k = i+2; i < j+23; i++)
+			{
+					if (k != i)
+					{
+						if ( isxdigit(str[i]) )
+						{
+							ret = true;
+						}
+						else
+						{
+							ret = false;
+							break;
+						}        
+					}
+					else
+					{
+						k += 3;
+					}
+			}
+		}	
+  return ret;
 }
 
-bool empty_dev_eui(deviceInfo di)
+bool emptyDevEui(deviceInfo di)
 {
-    bool ret = false;
-    for(int i=0 ; i<7 ; i++)
-    {
-        if(di.devEui[i] == 0)
-                ret = true;
-        else
-                ret = false;          
-    }
-    return ret;
+	bool ret = false;
+	for(int i=0 ; i<8 ; i++)
+	{
+		if(di.devEui[i] == 0)
+			ret = true;
+		else
+			ret = false;          
+	}
+	return ret;
 }
 
-deviceInfo dev_eui_cpy(char *str)
+deviceInfo devEuiCpy(char *str)
 {
-    deviceInfo d;
-    char buff[3];
-    int ibuff = 0;
-    for (int i = 0, k = 0; i < strlen((char *)str); i++)
-    {
-    if (i <= 15)
-            continue;
-    if (str[i] != '-' && str[i + 1] != '-' && i != 37)
-    {
-        //on utilise un for au lieu d'une simple copie de valeur de str à buff car problème lors de la copie des valeurs de txBuff
-        buff[0] = str[i];
-        buff[1] = str[i + 1];
-        buff[2] = '\0';
-        //conversion en base 16 du buffer dans un entier
-        ibuff = (int)strtol(buff, NULL, 16);
-        d.devEui[k] = ibuff;
-        k++;
-    }
-    if (i == 37)
-            break;
-    }
-    return d;
+	deviceInfo d;
+	int j = 0;
+	char buff[3];
+	int ibuff = 0;
+	while( !isxdigit(str[j]) )
+	{
+		j++;
+	}
+	for (int i = j, k = 0; i < j+23; i++)
+	{
+		if (str[i] != '-' && str[i + 1] != '-' && i != j+23)
+		{
+			buff[0] = str[i];
+			buff[1] = str[i + 1];
+			buff[2] = '\0';
+			//conversion en base 16 du buff dans un entier
+			ibuff = (int)strtol(buff, NULL, 16);
+			d.devEui[k] = ibuff;
+			k++;
+		}
+		if (i == j+23)
+			break;
+	}
+	return d;
 }
 
 /*!
  * @brief       Create the log gilename
  * @retval      void
  */
-void create_deveui_filename()
+void createDevEuiFilename()
 {
-        char str[12] = { 0 };
-        memset(filename_csv_current, 0, sizeof(filename_csv_current));
-        strcat(filename_csv_current,"./logs/devices/");
-	for(int i=0 ; i<8 ; i++)
-        {
-                sprintf(str,(i != 7)?"%02X-":"%02X",devInfArr[index_mb][index_s].devEui[i]);
-                strcat(filename_csv_current,str);
-        }
-        strcat(filename_csv_current,"_logs.csv");
+    sprintf(filename_csv_current,"./logs/devices/%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X_logs.csv",devInfo.devEui[0],devInfo.devEui[1],devInfo.devEui[2],devInfo.devEui[3],devInfo.devEui[4],devInfo.devEui[5],devInfo.devEui[6],devInfo.devEui[7]);
 }
-
-
-
