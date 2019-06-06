@@ -10,44 +10,44 @@ Cette version est la première version du programme de récupération de log. El
 
 ### Dictionnaire des données
 
-<b>Nom : </b>file_i2c \t
-<b>Type : </b>entier (int)
-<b>Description : </b>Descripteur de fichier du bus i2c
+**Nom : **file_i2c
+**Type : **entier (int)
+**Description : **Descripteur de fichier du bus i2c
 
-<b>Nom : </b>filename_i2c
-<b>Type : </b>chaine de caractères (char *)
-<b>Description : </b>Label du chemin vers le bus i2c linux
+**Nom : **filename_i2c
+**Type : **chaine de caractères (char *)
+**Description : **Label du chemin vers le bus i2c linux
 
-<b>Nom : </b>file_csv
-<b>Type : </b>descripteur de fichier (FILE *)
-<b>Description : </b>Descripteur de fichier du fichier de log du capteur
+**Nom : **file_csv
+**Type : **descripteur de fichier (FILE *)
+**Description : **Descripteur de fichier du fichier de log du capteur
 
-<b>Nom : </b>filename_csv
-<b>Type : </b>chaine de caractères (char *)
-<b>Description : </b>Label du fichier de log du capteur
+**Nom : **filename_csv
+**Type : **chaine de caractères (char *)
+**Description : **Label du fichier de log du capteur
 
-<b>Nom : </b>rxBuffer
-<b>Type : </b>caractère (char)
-<b>Description : </b>Buffer de reception
+**Nom : **rxBuffer
+**Type : **caractère (char)
+**Description : **Buffer de reception
 
-<b>Nom : </b>rxStrbuffer
-<b>Type : </b>chaine de caractères (char *)
-<b>Description : </b>chaine constituant le message de log
+**Nom : **rxStrbuffer
+**Type : **chaine de caractères (char *)
+**Description : **chaine constituant le message de log
 
-<b>Nom : </b>devInfo
-<b>Type : </b>information de capteur (deviceInfo)
-<b>Description : </b>Structure d'information du capteur
+**Nom : **devInfo
+**Type : **information de capteur (deviceInfo)
+**Description : **Structure d'information du capteur
 
-<b>Nom : </b>t
-<b>Type : </b>temps (time_t)
-<b>Description : </b>Variable de récupération de date
+**Nom : **t
+**Type : **temps (time_t)
+**Description : **Variable de récupération de date
 
-<b>Nom : </b>date
-<b>Type : </b>chaine de caractères (char *)
-<b>Description : </b>Chaine contenant l'horodatage formaté
+**Nom : **date
+**Type : **chaine de caractères (char *)
+**Description : **Chaine contenant l'horodatage formaté
 
-<b>Nom : </b>slave_addr
-<b>Type : </b> entier (int)
-<b>Description : </b>Adresse i2c de l'esclave (Middle Board)
+**Nom : **slave_addr
+**Type : ** entier (int)
+**Description : **Adresse i2c de l'esclave (Middle Board)
 
 
