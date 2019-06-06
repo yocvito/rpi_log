@@ -21,44 +21,44 @@ Cette version est la première version du programme de récupération de log. El
 
 ### Dictionnaire des données
 
-**Nom : **file_i2c  
-**Type : **entier (int)  
-**Description : **Descripteur de fichier du bus i2c  
+__Nom :__ file_i2c  
+__Type :__ entier (int)  
+__Description :__ Descripteur de fichier du bus i2c  
   
-**Nom : **filename_i2c  
-**Type : **chaine de caractères (char *)  
-**Description : **Label du chemin vers le bus i2c linux  
+__Nom :__ filename_i2c  
+__Type :__ chaine de caractères (char *)  
+__Description :__ Label du chemin vers le bus i2c linux  
   
-**Nom : **file_csv  
-**Type : **descripteur de fichier (FILE *)  
-**Description : **Descripteur de fichier du fichier de log du capteur  
+__Nom :__ file_csv  
+__Type :__ descripteur de fichier (FILE *)  
+__Description :__ Descripteur de fichier du fichier de log du capteur  
   
-**Nom : **filename_csv  
-**Type : **chaine de caractères (char *)  
-**Description : **Label du fichier de log du capteur  
+__Nom :__ filename_csv  
+__Type :__ chaine de caractères (char *)  
+__Description :__ Label du fichier de log du capteur  
   
-**Nom : **rxBuffer  
-**Type : **caractère (char)  
-**Description : **Buffer de reception  
+__Nom :__ rxBuffer  
+__Type :__ caractère (char)  
+__Description :__ Buffer de reception  
   
-**Nom : **rxStrbuffer  
-**Type : **chaine de caractères (char *)  
-**Description : **chaine constituant le message de log  
+__Nom :__ rxStrbuffer  
+__Type :__ chaine de caractères (char *)  
+__Description :__ chaine constituant le message de log  
   
-**Nom : **devInfo  
-**Type : **information de capteur (deviceInfo)  
-**Description : **Structure d'information du capteur  
+__Nom :__ devInfo  
+__Type :__ information de capteur (deviceInfo)  
+__Description :__ Structure d'information du capteur  
   
-**Nom : **t  
-**Type : **temps (time_t)  
-**Description : **Variable de récupération de date  
+__Nom :__ t  
+__Type :__ temps (time_t)  
+__Description :__ Variable de récupération de date  
   
-**Nom : **date  
-**Type : **chaine de caractères (char *)  
-**Description : **Chaine contenant l'horodatage formaté  
+__Nom :__ date  
+__Type :__ chaine de caractères (char *)  
+__Description :__ Chaine contenant l'horodatage formaté  
   
-**Nom : **slave_addr  
-**Type : ** entier (int)  
-**Description : **Adresse i2c de l'esclave (Middle Board)  
+__Nom :__ slave_addr  
+__Type :__  entier (int)  
+__Description :__ Adresse i2c de l'esclave (Middle Board)  
 
 
