@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 {
 
 	time_t t;
-  char date[20];
+  	char date[20];
 
 	//----- OPEN THE I2C BUS -----
 	char *filename = (char *)"/dev/i2c-1";

@@ -2,7 +2,7 @@
 <!DOCTYPE Tabula_Rasa>
 <Algorithme>
   <nom>Algorithme</nom>
-  <date_creation>6/6/2019 11:26</date_creation>
+  <date_creation>6/6/2019 11:48</date_creation>
   <Elements>
     <Action>
       <Position>828;8</Position>
@@ -26,18 +26,18 @@
               <Position>-143;192</Position>
               <StyleLien>1</StyleLien>
               <PreAssertion>void</PreAssertion>
-              <PostAssertion>filename</PostAssertion>
-              <Titre>filename ← "/dev/i2c-1"</Titre>
+              <PostAssertion>filename_i2c</PostAssertion>
+              <Titre>filename_i2c ← "/dev/i2c-1"</Titre>
               <DetailsVisible>1</DetailsVisible>
               <DetailsVideVisible>1</DetailsVideVisible>
               <Enfants/>
             </Action>
             <Procedure>
-              <Position>20;268</Position>
+              <Position>52;269</Position>
               <StyleLien>1</StyleLien>
-              <PreAssertion>filename</PreAssertion>
+              <PreAssertion>filename_i2c</PreAssertion>
               <PostAssertion>file_i2c</PostAssertion>
-              <Titre>file_i2c ← open(filename, O_RDWR)</Titre>
+              <Titre>file_i2c ← open(filename_i2c, O_RDWR)</Titre>
               <DetailsVisible>1</DetailsVisible>
               <DetailsVideVisible>1</DetailsVideVisible>
               <Enfants/>
