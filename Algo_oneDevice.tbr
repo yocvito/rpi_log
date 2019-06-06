@@ -1,0 +1,435 @@
+<?xml version="1.1"?>
+<!DOCTYPE Tabula_Rasa>
+<Algorithme>
+  <nom>Algorithme</nom>
+  <date_creation>6/6/2019 11:26</date_creation>
+  <Elements>
+    <Action>
+      <Position>828;8</Position>
+      <StyleLien>2</StyleLien>
+      <PreAssertion>?</PreAssertion>
+      <PostAssertion>?</PostAssertion>
+      <Titre>Log One Device</Titre>
+      <DetailsVisible>1</DetailsVisible>
+      <DetailsVideVisible>1</DetailsVideVisible>
+      <Enfants>
+        <Action>
+          <Position>-64;102</Position>
+          <StyleLien>2</StyleLien>
+          <PreAssertion>void</PreAssertion>
+          <PostAssertion>file_i2c</PostAssertion>
+          <Titre>Ouvrir le bus i2c</Titre>
+          <DetailsVisible>1</DetailsVisible>
+          <DetailsVideVisible>1</DetailsVideVisible>
+          <Enfants>
+            <Action>
+              <Position>-143;192</Position>
+              <StyleLien>1</StyleLien>
+              <PreAssertion>void</PreAssertion>
+              <PostAssertion>filename</PostAssertion>
+              <Titre>filename ← "/dev/i2c-1"</Titre>
+              <DetailsVisible>1</DetailsVisible>
+              <DetailsVideVisible>1</DetailsVideVisible>
+              <Enfants/>
+            </Action>
+            <Procedure>
+              <Position>20;268</Position>
+              <StyleLien>1</StyleLien>
+              <PreAssertion>filename</PreAssertion>
+              <PostAssertion>file_i2c</PostAssertion>
+              <Titre>file_i2c ← open(filename, O_RDWR)</Titre>
+              <DetailsVisible>1</DetailsVisible>
+              <DetailsVideVisible>1</DetailsVideVisible>
+              <Enfants/>
+            </Procedure>
+          </Enfants>
+        </Action>
+        <Action>
+          <Position>423;97</Position>
+          <StyleLien>2</StyleLien>
+          <PreAssertion>file_i2c,
+slave_addr</PreAssertion>
+          <PostAssertion>void</PostAssertion>
+          <Titre>Connection à l'esclave</Titre>
+          <DetailsVisible>1</DetailsVisible>
+          <DetailsVideVisible>1</DetailsVideVisible>
+          <Enfants>
+            <Procedure>
+              <Position>393;199</Position>
+              <StyleLien>1</StyleLien>
+              <PreAssertion>file_i2c,
+slave_addr</PreAssertion>
+              <PostAssertion>void</PostAssertion>
+              <Titre>ioctl(file_i2c, I2C_SLAVE, slave_addr)</Titre>
+              <DetailsVisible>1</DetailsVisible>
+              <DetailsVideVisible>1</DetailsVideVisible>
+              <Enfants/>
+            </Procedure>
+          </Enfants>
+        </Action>
+        <Iteration>
+          <Position>1047.5;122.5</Position>
+          <StyleLien>1</StyleLien>
+          <Titre>true</Titre>
+          <IterationFixe>1</IterationFixe>
+          <Enfants>
+            <Action>
+              <Position>885;199</Position>
+              <StyleLien>2</StyleLien>
+              <PreAssertion>file_i2c,
+&amp;rxBuffer</PreAssertion>
+              <PostAssertion>rxBuffer</PostAssertion>
+              <Titre>Lecture par i2c</Titre>
+              <DetailsVisible>1</DetailsVisible>
+              <DetailsVideVisible>1</DetailsVideVisible>
+              <Enfants>
+                <Condition>
+                  <Position>945.5;271</Position>
+                  <StyleLien>1</StyleLien>
+                  <estUnique>0</estUnique>
+                  <operationsLogiques>
+                    <operation>
+                      <Titre>si read(file_i2c, &amp;rxBuffer, 1) > 0</Titre>
+                      <Enfants>
+                        <Action>
+                          <Position>805;336</Position>
+                          <StyleLien>2</StyleLien>
+                          <PreAssertion>rxBuffer,
+rxStrBuffer</PreAssertion>
+                          <PostAssertion>void</PostAssertion>
+                          <Titre>Analyse des caractères et construction du fichier de log</Titre>
+                          <DetailsVisible>1</DetailsVisible>
+                          <DetailsVideVisible>1</DetailsVideVisible>
+                          <Enfants>
+                            <Condition>
+                              <Position>910.5;409</Position>
+                              <StyleLien>0</StyleLien>
+                              <estUnique>0</estUnique>
+                              <operationsLogiques>
+                                <operation>
+                                  <Titre>si rxBuffer = '\r' OU rxBuffer = '\n'</Titre>
+                                  <Enfants>
+                                    <Action>
+                                      <Position>-147;508</Position>
+                                      <StyleLien>2</StyleLien>
+                                      <PreAssertion>rxStrBuffer</PreAssertion>
+                                      <PostAssertion>void</PostAssertion>
+                                      <Titre>Cas où la chaine est vide</Titre>
+                                      <DetailsVisible>1</DetailsVisible>
+                                      <DetailsVideVisible>1</DetailsVideVisible>
+                                      <Enfants>
+                                        <Condition>
+                                          <Position>-45.5;587</Position>
+                                          <StyleLien>1</StyleLien>
+                                          <estUnique>0</estUnique>
+                                          <operationsLogiques>
+                                            <operation>
+                                              <Titre>si strlen(rxStrBuffer) &lt;= 0</Titre>
+                                              <Enfants>
+                                                <Procedure>
+                                                  <Position>-79;661</Position>
+                                                  <StyleLien>1</StyleLien>
+                                                  <PreAssertion>void</PreAssertion>
+                                                  <PostAssertion>void</PostAssertion>
+                                                  <Titre>continue</Titre>
+                                                  <DetailsVisible>1</DetailsVisible>
+                                                  <DetailsVideVisible>1</DetailsVideVisible>
+                                                  <Enfants/>
+                                                </Procedure>
+                                              </Enfants>
+                                            </operation>
+                                            <operation>
+                                              <Titre>void</Titre>
+                                              <Enfants/>
+                                            </operation>
+                                          </operationsLogiques>
+                                        </Condition>
+                                      </Enfants>
+                                    </Action>
+                                    <Action>
+                                      <Position>550;514</Position>
+                                      <StyleLien>2</StyleLien>
+                                      <PreAssertion>rxStrBuffer, 
+devInfo
+</PreAssertion>
+                                      <PostAssertion>?</PostAssertion>
+                                      <Titre>traitement de la chaine rxStrBuffer</Titre>
+                                      <DetailsVisible>1</DetailsVisible>
+                                      <DetailsVideVisible>1</DetailsVideVisible>
+                                      <Enfants>
+                                        <Condition>
+                                          <Position>662.5;595</Position>
+                                          <StyleLien>0</StyleLien>
+                                          <estUnique>0</estUnique>
+                                          <operationsLogiques>
+                                            <operation>
+                                              <Titre>si emptyDevEui(devInfo) = vrai</Titre>
+                                              <Enfants>
+                                                <Action>
+                                                  <Position>260;663</Position>
+                                                  <StyleLien>2</StyleLien>
+                                                  <PreAssertion>rxStrBuffer</PreAssertion>
+                                                  <PostAssertion>devInfo</PostAssertion>
+                                                  <Titre>Analyse de la chaine</Titre>
+                                                  <DetailsVisible>1</DetailsVisible>
+                                                  <DetailsVideVisible>1</DetailsVideVisible>
+                                                  <Enfants>
+                                                    <Condition>
+                                                      <Position>132.5;761</Position>
+                                                      <StyleLien>1</StyleLien>
+                                                      <estUnique>0</estUnique>
+                                                      <operationsLogiques>
+                                                        <operation>
+                                                          <Titre>si isDevEui(rxStrBuffer) = vrai</Titre>
+                                                          <Enfants>
+                                                            <Action>
+                                                              <Position>-11;827</Position>
+                                                              <StyleLien>2</StyleLien>
+                                                              <PreAssertion>rxStrBuffer,
+slave_addr</PreAssertion>
+                                                              <PostAssertion>devInfo</PostAssertion>
+                                                              <Titre>On rempli la structure d'info du capteur</Titre>
+                                                              <DetailsVisible>1</DetailsVisible>
+                                                              <DetailsVideVisible>1</DetailsVideVisible>
+                                                              <Enfants>
+                                                                <Procedure>
+                                                                  <Position>-148;914</Position>
+                                                                  <StyleLien>1</StyleLien>
+                                                                  <PreAssertion>rxStrBuffer</PreAssertion>
+                                                                  <PostAssertion>devInfo</PostAssertion>
+                                                                  <Titre>devInfo ← devEuiCpy(rxStrBuffer)</Titre>
+                                                                  <DetailsVisible>1</DetailsVisible>
+                                                                  <DetailsVideVisible>1</DetailsVideVisible>
+                                                                  <Enfants/>
+                                                                </Procedure>
+                                                                <Action>
+                                                                  <Position>108;976</Position>
+                                                                  <StyleLien>1</StyleLien>
+                                                                  <PreAssertion>slave_addr</PreAssertion>
+                                                                  <PostAssertion>devInfo</PostAssertion>
+                                                                  <Titre>devInfo.i2cAddr ← slave_addr</Titre>
+                                                                  <DetailsVisible>1</DetailsVisible>
+                                                                  <DetailsVideVisible>1</DetailsVideVisible>
+                                                                  <Enfants/>
+                                                                </Action>
+                                                              </Enfants>
+                                                            </Action>
+                                                          </Enfants>
+                                                        </operation>
+                                                        <operation>
+                                                          <Titre>void</Titre>
+                                                          <Enfants/>
+                                                        </operation>
+                                                      </operationsLogiques>
+                                                    </Condition>
+                                                  </Enfants>
+                                                </Action>
+                                              </Enfants>
+                                            </operation>
+                                            <operation>
+                                              <Titre>Sinon</Titre>
+                                              <Enfants>
+                                                <Action>
+                                                  <Position>826;670</Position>
+                                                  <StyleLien>2</StyleLien>
+                                                  <PreAssertion>devInfo,
+rxStrBuffer</PreAssertion>
+                                                  <PostAssertion>void</PostAssertion>
+                                                  <Titre>Ecriture du log</Titre>
+                                                  <DetailsVisible>1</DetailsVisible>
+                                                  <DetailsVideVisible>1</DetailsVideVisible>
+                                                  <Enfants>
+                                                    <Action>
+                                                      <Position>505;760</Position>
+                                                      <StyleLien>2</StyleLien>
+                                                      <PreAssertion>devInfo</PreAssertion>
+                                                      <PostAssertion>filename_csv</PostAssertion>
+                                                      <Titre>Création du nom de fichier en fonction du devEui</Titre>
+                                                      <DetailsVisible>1</DetailsVisible>
+                                                      <DetailsVideVisible>1</DetailsVideVisible>
+                                                      <Enfants>
+                                                        <Procedure>
+                                                          <Position>506;837</Position>
+                                                          <StyleLien>1</StyleLien>
+                                                          <PreAssertion>devInfo</PreAssertion>
+                                                          <PostAssertion>filename_csv</PostAssertion>
+                                                          <Titre>createDevEuiFilename()</Titre>
+                                                          <DetailsVisible>1</DetailsVisible>
+                                                          <DetailsVideVisible>1</DetailsVideVisible>
+                                                          <Enfants/>
+                                                        </Procedure>
+                                                      </Enfants>
+                                                    </Action>
+                                                    <Action>
+                                                      <Position>1240;825</Position>
+                                                      <StyleLien>2</StyleLien>
+                                                      <PreAssertion>filename_csv,
+rxStrBuffer</PreAssertion>
+                                                      <PostAssertion>void</PostAssertion>
+                                                      <Titre>Ouverture du fichier et écriture</Titre>
+                                                      <DetailsVisible>1</DetailsVisible>
+                                                      <DetailsVideVisible>1</DetailsVideVisible>
+                                                      <Enfants>
+                                                        <Procedure>
+                                                          <Position>571;954</Position>
+                                                          <StyleLien>1</StyleLien>
+                                                          <PreAssertion>filename_csv</PreAssertion>
+                                                          <PostAssertion>file_csv</PostAssertion>
+                                                          <Titre>file_csv ← fopen(filename_csv, "a+")</Titre>
+                                                          <DetailsVisible>1</DetailsVisible>
+                                                          <DetailsVideVisible>1</DetailsVideVisible>
+                                                          <Enfants/>
+                                                        </Procedure>
+                                                        <Condition>
+                                                          <Position>1103.5;952</Position>
+                                                          <StyleLien>1</StyleLien>
+                                                          <estUnique>0</estUnique>
+                                                          <operationsLogiques>
+                                                            <operation>
+                                                              <Titre>si fichier vide</Titre>
+                                                              <Enfants>
+                                                                <Action>
+                                                                  <Position>967;1019</Position>
+                                                                  <StyleLien>1</StyleLien>
+                                                                  <PreAssertion>file_csv</PreAssertion>
+                                                                  <PostAssertion>void</PostAssertion>
+                                                                  <Titre>écriture de la légende dans le fichier du log</Titre>
+                                                                  <DetailsVisible>1</DetailsVisible>
+                                                                  <DetailsVideVisible>1</DetailsVideVisible>
+                                                                  <Enfants/>
+                                                                </Action>
+                                                              </Enfants>
+                                                            </operation>
+                                                            <operation>
+                                                              <Titre>void</Titre>
+                                                              <Enfants/>
+                                                            </operation>
+                                                          </operationsLogiques>
+                                                        </Condition>
+                                                        <Action>
+                                                          <Position>1349;946</Position>
+                                                          <StyleLien>1</StyleLien>
+                                                          <PreAssertion>t</PreAssertion>
+                                                          <PostAssertion>date</PostAssertion>
+                                                          <Titre>Génération de l'horodatage</Titre>
+                                                          <DetailsVisible>1</DetailsVisible>
+                                                          <DetailsVideVisible>1</DetailsVideVisible>
+                                                          <Enfants/>
+                                                        </Action>
+                                                        <Action>
+                                                          <Position>1709;945</Position>
+                                                          <StyleLien>1</StyleLien>
+                                                          <PreAssertion>date, 
+slave_addr,
+rxStrBuffer</PreAssertion>
+                                                          <PostAssertion>void</PostAssertion>
+                                                          <Titre>Ecriture du log dans le fichier</Titre>
+                                                          <DetailsVisible>1</DetailsVisible>
+                                                          <DetailsVideVisible>1</DetailsVideVisible>
+                                                          <Enfants/>
+                                                        </Action>
+                                                      </Enfants>
+                                                    </Action>
+                                                  </Enfants>
+                                                </Action>
+                                              </Enfants>
+                                            </operation>
+                                          </operationsLogiques>
+                                        </Condition>
+                                      </Enfants>
+                                    </Action>
+                                    <Action>
+                                      <Position>993;513</Position>
+                                      <StyleLien>2</StyleLien>
+                                      <PreAssertion>rxStrBuffer</PreAssertion>
+                                      <PostAssertion>rxStrBuffer</PostAssertion>
+                                      <Titre>Remise à zero de la chaine</Titre>
+                                      <DetailsVisible>1</DetailsVisible>
+                                      <DetailsVideVisible>1</DetailsVideVisible>
+                                      <Enfants>
+                                        <Procedure>
+                                          <Position>978;588</Position>
+                                          <StyleLien>1</StyleLien>
+                                          <PreAssertion>rxStrBuffer</PreAssertion>
+                                          <PostAssertion>rxStrBuffer</PostAssertion>
+                                          <Titre>memset(rxStrBuffer, '\0', sizeof(char) *MAX_BUFFER_SIZE)</Titre>
+                                          <DetailsVisible>1</DetailsVisible>
+                                          <DetailsVideVisible>1</DetailsVideVisible>
+                                          <Enfants/>
+                                        </Procedure>
+                                      </Enfants>
+                                    </Action>
+                                  </Enfants>
+                                </operation>
+                                <operation>
+                                  <Titre>Sinon</Titre>
+                                  <Enfants>
+                                    <Action>
+                                      <Position>1560;504</Position>
+                                      <StyleLien>2</StyleLien>
+                                      <PreAssertion>&amp;rxBuffer,
+rxStrBuffer</PreAssertion>
+                                      <PostAssertion>rxStrBuffer</PostAssertion>
+                                      <Titre>Ajout du caractère reçu à la chaine rxStrBuffer</Titre>
+                                      <DetailsVisible>1</DetailsVisible>
+                                      <DetailsVideVisible>1</DetailsVideVisible>
+                                      <Enfants>
+                                        <Procedure>
+                                          <Position>1550;596</Position>
+                                          <StyleLien>1</StyleLien>
+                                          <PreAssertion>&amp;rxBuffer,
+rxStrBuffer</PreAssertion>
+                                          <PostAssertion>rxStrBuffer</PostAssertion>
+                                          <Titre>strncat(rxStrBuffer, &amp;rxBuffer, 1)</Titre>
+                                          <DetailsVisible>1</DetailsVisible>
+                                          <DetailsVideVisible>1</DetailsVideVisible>
+                                          <Enfants/>
+                                        </Procedure>
+                                      </Enfants>
+                                    </Action>
+                                  </Enfants>
+                                </operation>
+                              </operationsLogiques>
+                            </Condition>
+                          </Enfants>
+                        </Action>
+                      </Enfants>
+                    </operation>
+                    <operation>
+                      <Titre>void</Titre>
+                      <Enfants/>
+                    </operation>
+                  </operationsLogiques>
+                </Condition>
+              </Enfants>
+            </Action>
+          </Enfants>
+        </Iteration>
+        <Sortie>
+          <Position>1910;122</Position>
+        </Sortie>
+        <Action>
+          <Position>1354;118</Position>
+          <StyleLien>2</StyleLien>
+          <PreAssertion>file_i2c</PreAssertion>
+          <PostAssertion>void</PostAssertion>
+          <Titre>Fermeture du bus i2c</Titre>
+          <DetailsVisible>1</DetailsVisible>
+          <DetailsVideVisible>1</DetailsVideVisible>
+          <Enfants>
+            <Procedure>
+              <Position>1363;193</Position>
+              <StyleLien>1</StyleLien>
+              <PreAssertion>file_i2c</PreAssertion>
+              <PostAssertion>void</PostAssertion>
+              <Titre>close(file_i2c)</Titre>
+              <DetailsVisible>1</DetailsVisible>
+              <DetailsVideVisible>1</DetailsVideVisible>
+              <Enfants/>
+            </Procedure>
+          </Enfants>
+        </Action>
+      </Enfants>
+    </Action>
+  </Elements>
+</Algorithme>

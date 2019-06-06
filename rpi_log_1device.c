@@ -12,6 +12,7 @@
 #include <ctype.h>
 
 #define MAX_BUFFER_SIZE 100
+#define DEBUG			1
 
 /*!
  *	Structure définissant diverses informations concernants un capteur à savoir :
@@ -108,17 +109,18 @@ int main(int argc, char **argv)
 		{		
 			if(rxBuffer == '\r' || rxBuffer == '\n')
 			{
+				//si la chaine est vide (e.g : si elle contient uniquement un \r ou \n)
 				if(strlen(rxStrbuffer) <= 0)
 					continue;
 
 				if(empty_dev_eui(devInfo))
 				{
-						if( is_dev_eui(rxStrbuffer) )
-						{
-							//on remplit la structure du device
-							devInfo = dev_eui_cpy(rxStrbuffer);
-							devInfo.i2cAddr = current_addr;
-						}
+					if( is_dev_eui(rxStrbuffer) )
+					{
+						//on remplit la structure du device
+						devInfo = dev_eui_cpy(rxStrbuffer);
+						devInfo.i2cAddr = current_addr;
+					}
 				}
 				else
 				{
@@ -141,7 +143,9 @@ int main(int argc, char **argv)
 						strftime(date,sizeof(date),"%d/%m/%Y %H:%M:%S",localtime(&t));
 
 						//on écrit dans le fichier de log
+#if DEBUG == 1
 						fprintf(stdout,"%s; 0x%02X; %s\r\n",date,current_addr,rxStrbuffer);
+#endif
 						fprintf(file_csv_current,"%s; 0x%02X; %s\r\n",date,current_addr,rxStrbuffer);
 
 						//fermeture du fichier de log
@@ -156,7 +160,6 @@ int main(int argc, char **argv)
 			}	
 		}		
 	}
-
 	close(file_i2c);
 	return EXIT_SUCCESS;
 }
@@ -170,7 +173,7 @@ bool is_dev_eui(char *str)
 	{
 		j++;
 		if( j > (strlen(str)-1) )			//si j est supérieur à l'index du dernier élément de str
-			return false;								//et qu'il n'a toujours pas rencontré de caractère hexadecimal on retourne faux
+			return false;					//et qu'on n'a toujours pas rencontré de caractère hexadecimal on retourne faux
 	}
 		if(strlen(str) >= j+22)
 		{
