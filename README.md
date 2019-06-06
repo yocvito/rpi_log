@@ -10,7 +10,7 @@ Cette version est la première version du programme de récupération de log. El
 
 ### Dictionnaire des données
 
-<b>Nom : </b>file_i2c
+<b>Nom : </b>file_i2c \t
 <b>Type : </b>entier (int)
 <b>Description : </b>Descripteur de fichier du bus i2c
 
