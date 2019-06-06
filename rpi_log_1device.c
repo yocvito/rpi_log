@@ -46,8 +46,8 @@ char filename_csv_current[50] = { 0 };
 /*!
  *	Buffers de reception
  */
-char rxBuffer;
-char rxStrbuffer[MAX_BUFFER_SIZE] = { 0 };
+char rx_buffer;
+char str_buffer[MAX_BUFFER_SIZE] = { 0 };
 
 /*!
  *	Structure d'information du device
@@ -60,27 +60,27 @@ deviceInfo devInfo = {0};
  *  @param  str      chaine de charactères à analyser
  *  @retval boolean
  */
-bool is_dev_eui(char *str);
+bool isDevEui(char *str);
 
 /*!
  *  @brief  Analyse de l'élément devEui de la structure di afin de savcoir s'il est vide ou non
  *  @param  di      structure de type deviceInfo à analyser
  *  @retval boolean
  */
-bool empty_dev_eui(deviceInfo di);
+bool emptyDevEui(deviceInfo di);
 
 /*!
  *  @brief  Permet de récuperer le devEui contenu dans la chaine str et de le formater une structure de type deviceInfo
  *  @param  str      chaine de charactères à copier
  *  @retval deviceInfo
  */
-deviceInfo dev_eui_cpy(char *str);
+deviceInfo devEuiCpy(char *str);
 
 /*!
  * 	@brief       Permet de créer le nom du fichier de log courant
  * 	@retval      void
  */
-void create_deveui_filename();
+void createDevEuiFilename();
 
 int main(int argc, char **argv)
 {
@@ -105,27 +105,27 @@ int main(int argc, char **argv)
 	}
 	while(true)
 	{
-		if (read(file_i2c, &rxBuffer, 1) > 0)
+		if (read(file_i2c, &rx_buffer, 1) > 0)
 		{		
-			if(rxBuffer == '\r' || rxBuffer == '\n')
+			if(rx_buffer == '\r' || rx_buffer == '\n')
 			{
 				//si la chaine est vide (e.g : si elle contient uniquement un \r ou \n)
-				if(strlen(rxStrbuffer) <= 0)
+				if(strlen(str_buffer) <= 0)
 					continue;
 
-				if(empty_dev_eui(devInfo))
+				if(emptyDevEui(devInfo))
 				{
-					if( is_dev_eui(rxStrbuffer) )
+					if( isDevEui(str_buffer) )
 					{
 						//on remplit la structure du device
-						devInfo = dev_eui_cpy(rxStrbuffer);
+						devInfo = devEuiCpy(str_buffer);
 						devInfo.i2cAddr = current_addr;
 					}
 				}
 				else
 				{
 					//on crée une nom de fichier en fonction du devEui
-					create_deveui_filename();
+					createDevEuiFilename();
 
 					if ((file_csv_current = fopen(filename_csv_current, "a")) < 0)
 					{
@@ -144,19 +144,19 @@ int main(int argc, char **argv)
 
 						//on écrit dans le fichier de log
 #if DEBUG == 1
-						fprintf(stdout,"%s; 0x%02X; %s\r\n",date,current_addr,rxStrbuffer);
+						fprintf(stdout,"%s; 0x%02X; %s\r\n",date,current_addr,str_buffer);
 #endif
-						fprintf(file_csv_current,"%s; 0x%02X; %s\r\n",date,current_addr,rxStrbuffer);
+						fprintf(file_csv_current,"%s; 0x%02X; %s\r\n",date,current_addr,str_buffer);
 
 						//fermeture du fichier de log
 						fclose(file_csv_current);
 					}
 				}
-				memset( rxStrbuffer, '\0', sizeof(char) * MAX_BUFFER_SIZE );	
+				memset( str_buffer, '\0', sizeof(char) * MAX_BUFFER_SIZE );	
 			}
 			else
 			{
-				strncat(rxStrbuffer, &rxBuffer, 1);
+				strncat(str_buffer, &rx_buffer, 1);
 			}	
 		}		
 	}
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 	return EXIT_SUCCESS;
 }
 
-bool is_dev_eui(char *str)
+bool isDevEui(char *str)
 {
   bool ret = false;
   int j = 0;
@@ -200,7 +200,7 @@ bool is_dev_eui(char *str)
   return ret;
 }
 
-bool empty_dev_eui(deviceInfo di)
+bool emptyDevEui(deviceInfo di)
 {
 	bool ret = false;
 	for(int i=0 ; i<8 ; i++)
@@ -213,7 +213,7 @@ bool empty_dev_eui(deviceInfo di)
 	return ret;
 }
 
-deviceInfo dev_eui_cpy(char *str)
+deviceInfo devEuiCpy(char *str)
 {
 	deviceInfo d;
 	int j = 0;
@@ -241,7 +241,7 @@ deviceInfo dev_eui_cpy(char *str)
 	return d;
 }
 
-void create_deveui_filename()
+void createDevEuiFilename()
 {
         sprintf(filename_csv_current,"./logs/devices/%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X_logs.csv",devInfo.devEui[0],devInfo.devEui[1],devInfo.devEui[2],devInfo.devEui[3],devInfo.devEui[4],devInfo.devEui[5],devInfo.devEui[6],devInfo.devEui[7]);
 }
