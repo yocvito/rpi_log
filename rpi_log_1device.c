@@ -110,6 +110,7 @@ int main(int argc, char **argv)
 				if(strlen(str_buffer) <= 0)
 					continue;
 
+				//on vérifie si le devEui est vide
 				if(emptyDevEui(devInfo))
 				{
 					if( isDevEui(str_buffer) )
@@ -149,10 +150,12 @@ int main(int argc, char **argv)
 						fclose(file_csv);
 					}
 				}
+				//remise de la chaine à zero
 				memset( str_buffer, '\0', sizeof(char) * MAX_BUFFER_SIZE );	
 			}
 			else
 			{
+				//concaténation de la chaine str_buffer avec le caractère recu en i2c
 				strncat(str_buffer, &rx_buffer, 1);
 			}	
 		}		
@@ -216,10 +219,12 @@ deviceInfo devEuiCpy(char *str)
 	int j = 0;
 	char buff[3];
 	int ibuff = 0;
+
 	while( !isxdigit(str[j]) )
 	{
-		j++;
-	}
+		j++;        //pas besoin de condition de sortie de la boucle puisque cette fonction
+	}               //est appelée uniquement si str contient le devEui
+	
 	for (int i = j, k = 0; i < j+23; i++)
 	{
 		if (str[i] != '-' && str[i + 1] != '-' && i != j+23)
