@@ -10,10 +10,10 @@
 #include <time.h>
 #include <ctype.h>
 
-//defines
 #define NB_MIDDLE_BOARD         1
 #define NB_MB_UART_PORT         1
-#define MAX_STR_SIZE            100
+#define MAX_BUFFER_SIZE         100
+#define DEBUG                   1
 
 /*!
  *	Structure définissant diverses informations concernants un capteur à savoir :
@@ -51,14 +51,13 @@ deviceInfo devInfArr[NB_MIDDLE_BOARD][NB_MB_UART_PORT] = { 0 };
  *	Buffers de reception
  */
 char rx_buffer = 0;
-char str_buffer[MAX_STR_SIZE];
+char str_buffer[MAX_BUFFER_SIZE];
 
 /*!
  *  Tableau contenant les adresses i2c des boards intermédiaires
  */
 int devices_addr[] = {
     0x08
-    //Devices addr here
 };
 /*!
  *  Index pour le parcours des boards intermédiaires
@@ -108,51 +107,103 @@ int main(int argc, char **argv)
         fprintf(stderr, "Error open : (errno %d) %s\r\n",errno,strerror(errno));
         return EXIT_FAILURE;
     }
-    else
-    {
-        int current_addr = 0x00;       //current i2c addr
-        while (true)
-        {       
-            //communicate with middle boards
-            for (index_mb = 0; index_mb < NB_MIDDLE_BOARD; index_mb++)
+    int current_addr = 0x00;       //current i2c addr
+    
+#if DEBUG == 1
+    printf("###### ===== INVISSYS LOG RECUP ===== ######\r\n\r\n");
+    printf("NUMBER OF SENSORS : %d\r\n", (NB_MB_UART_PORT*NB_MIDDLE_BOARD) );
+    printf("NUMBER OF MIDDLE BOARDS : %d\r\n", NB_MIDDLE_BOARD);
+    printf("I2C ADDRESS OF BOARDS : \r\n");
+    for(int i=0 ; i<NB_MIDDLE_BOARD ; i++)
+        printf("\t0x%02X\r\n",devices_addr[i]);
+    printf("###### ============================== ######\r\n\r\n");
+#endif
+
+    while (true)
+    {     
+        //Communication avec les cartes intermédiaires
+        for (index_mb = 0; index_mb < NB_MIDDLE_BOARD; index_mb++)
+        { 
+            current_addr = devices_addr[index_mb];
+
+            //permet d'initier la connexion avec l'esclave courant
+            if (ioctl(file_i2c, I2C_SLAVE, current_addr) < 0)
             {
-                current_addr = devices_addr[index_mb];
-
-                if (ioctl(file_i2c, I2C_SLAVE, current_addr) < 0)
+                fprintf(stderr, "Error ioctl : (errno %d) %s\r\n",errno, strerror(errno));
+                continue;
+            }
+            //Communication avec les cartes 
+            for (index_s = 0; index_s < NB_MB_UART_PORT; index_s++)
+            { 
+                //read a line
+                while(true)
                 {
-                    fprintf(stderr, "Error ioctl : (errno %d) %s\r\n",errno, strerror(errno));
-                    continue;
-                }
-                //communicate with sensors
-                for (index_s = 0; index_s < NB_MB_UART_PORT; index_s++)
-                {
-                    //read a line
-                    while(true)
+                    if (read(file_i2c, &rx_buffer, 1) > 0)
                     {
-                        //----- READ DATA -----
-                        if (read(file_i2c, &rx_buffer, 1) > 0)
+                        if(rx_buffer == '\r' || rx_buffer == '\n')
                         {
-                            if(rx_buffer == '\r' || rx_buffer == '\n')
-                            {
+                            //si la chaine est vide (e.g : si elle contient uniquement un \r ou \n)
+                            if(strlen(str_buffer) <= 0)
+                                break;
 
+                            if(emptyDevEui(devInfArr[index_mb][index_s]))
+                            {
+                                if( isDevEui(str_buffer) )
+                                {
+                                    //on remplit la structure du device
+                                    devInfArr[index_mb][index_s] = devEuiCpy(str_buffer);
+                                    devInfArr[index_mb][index_s].i2cAddr = current_addr;
+                                }
                             }
                             else
                             {
+                                //on crée une nom de fichier en fonction du devEui
+                                createDevEuiFilename();
 
-                            }                                            
+                                if ((file_csv_current = fopen(filename_csv_current, "a")) < 0)
+                                {
+                                    fprintf(stderr, "Error open : (errno %d) %s\r\n",errno, strerror(errno));
+                                    return EXIT_FAILURE;
+                                }
+                                else
+                                {
+                                    //on vérifie si le fichier est vide
+                                    if(ftell(file_csv_current) == 0)
+                                        fprintf(file_csv_current,"Timestamp; MiddleBoard Address; Log\r\n");
+                                    
+                                    //on génère le timestamp
+                                    time(&t);
+                                    strftime(date,sizeof(date),"%d/%m/%Y %H:%M:%S",localtime(&t));
+
+                                    //on écrit dans le fichier de log
+#if DEBUG == 1
+                                    fprintf(stdout,"%s; 0x%02X; %s\r\n",date,devInfArr[index_mb][index_s].i2cAddr,str_buffer);
+#endif
+                                    fprintf(file_csv_current,"%s; 0x%02X; %s\r\n",date,devInfArr[index_mb][index_s].i2cAddr,str_buffer);
+
+                                    //fermeture du fichier de log
+                                    fclose(file_csv_current);
+                                }
+                            }
+                            //remise de la chaine à zero
+                            memset( str_buffer, '\0', sizeof(char) * MAX_BUFFER_SIZE );	
+                            break;
                         }
                         else
                         {
-                            //ERROR HANDLING: i2c transaction failed
-                            fprintf(stderr, "Error read : (errno %d) %s\r\n",errno, strerror(errno));
-                            break;
+                            //concaténation de la chaine str_buffer avec le caractère recu en i2c
+                            strncat(str_buffer, &rx_buffer, 1);
                         }
                     }
+                    else
+                    {
+                        break;
+                    }                   	                                           
                 }
             }
         }
-        close(file_i2c);
-    }      
+    }
+    close(file_i2c);     
     return EXIT_SUCCESS;
 }
 
@@ -172,31 +223,38 @@ bool isDevEui(char *str)
 		if( j > (strlen(str)-1) )			//si j est supérieur à l'index du dernier élément de str
 			return false;					//et qu'on n'a toujours pas rencontré de caractère hexadecimal on retourne faux
 	}
-		if(strlen(str) >= j+22)
-		{
-			for (int i = j, k = i+2; i < j+23; i++)
-			{
-					if (k != i)
-					{
-						if ( isxdigit(str[i]) )
-						{
-							ret = true;
-						}
-						else
-						{
-							ret = false;
-							break;
-						}        
-					}
-					else
-					{
-						k += 3;
-					}
-			}
-		}	
+
+    //on ne rentre pas dans la boucle si str à partir de l'indice j fais au moins la taille du devEui
+    if(strlen(str) >= j+22)
+    {
+        for (int i = j, k = i+2; i < j+23; i++)
+        {
+            if (k != i)
+            {
+                if ( isxdigit(str[i]) )
+                {
+                    ret = true;
+                }
+                else
+                {
+                    ret = false;
+                    break;
+                }        
+            }
+            else
+            {
+                k += 3;
+            }
+        }
+    }	
   return ret;
 }
 
+/*!
+ *  @brief  Analyse de l'élément devEui de la structure di afin de savcoir s'il est vide ou non
+ *  @param  di      structure de type deviceInfo à analyser
+ *  @retval boolean
+ */
 bool emptyDevEui(deviceInfo di)
 {
 	bool ret = false;
@@ -210,39 +268,51 @@ bool emptyDevEui(deviceInfo di)
 	return ret;
 }
 
+/*!
+ *  @brief  Permet de récuperer le devEui contenu dans la chaine str et de le formater une structure de type deviceInfo
+ *  @param  str      chaine de charactères à copier
+ *  @retval deviceInfo
+ */
 deviceInfo devEuiCpy(char *str)
 {
 	deviceInfo d;
 	int j = 0;
 	char buff[3];
 	int ibuff = 0;
+
 	while( !isxdigit(str[j]) )
 	{
-		j++;
-	}
-	for (int i = j, k = 0; i < j+23; i++)
+		j++;        //pas besoin de condition de sortie de la boucle puisque cette fonction
+	}               //est appelée uniquement si str contient le devEui
+	
+    //on parcours la chaine sur portion ou est le devEui
+    for (int i = j, k = 0; i < j+23; i++)
 	{
+        
 		if (str[i] != '-' && str[i + 1] != '-' && i != j+23)
 		{
-			buff[0] = str[i];
-			buff[1] = str[i + 1];
-			buff[2] = '\0';
+			buff[0] = str[i];       //permet de copier le nombre
+			buff[1] = str[i + 1];   //hexadecimal dans une chaine de caractère
+			buff[2] = '\0';         //afin de la convertir en entier
+
 			//conversion en base 16 du buff dans un entier
 			ibuff = (int)strtol(buff, NULL, 16);
 			d.devEui[k] = ibuff;
 			k++;
 		}
-		if (i == j+23)
+		if (i == j+23)  //si on a parcouru tout les éléments du devEui on sort de la boucle
 			break;
 	}
 	return d;
 }
 
 /*!
- * @brief       Create the log gilename
- * @retval      void
+ * 	@brief  Permet de créer le nom du fichier de log courant
+ *      Format du chemin :
+ *          "./logs/devices/dev_eui_du_capteur_logs.csv"
+ * 	@retval void
  */
 void createDevEuiFilename()
 {
-    sprintf(filename_csv_current,"./logs/devices/%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X_logs.csv",devInfo.devEui[0],devInfo.devEui[1],devInfo.devEui[2],devInfo.devEui[3],devInfo.devEui[4],devInfo.devEui[5],devInfo.devEui[6],devInfo.devEui[7]);
+    sprintf(filename_csv_current,"./logs/devices/%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X_logs.csv",devInfArr[index_mb][index_s].devEui[0],devInfArr[index_mb][index_s].devEui[1],devInfArr[index_mb][index_s].devEui[2],devInfArr[index_mb][index_s].devEui[3],devInfArr[index_mb][index_s].devEui[4],devInfArr[index_mb][index_s].devEui[5],devInfArr[index_mb][index_s].devEui[6],devInfArr[index_mb][index_s].devEui[7]);
 }
