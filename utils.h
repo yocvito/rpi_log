@@ -17,6 +17,7 @@ typedef struct
 {
 	int i2cAddr;
 	unsigned char devEui[8];
+	int uartPort;
 } deviceInfo ;
 
 /*!
@@ -128,4 +129,20 @@ void devEuiCpy(deviceInfo *di, char *str)
 void createDevEuiFilename(char *filename, deviceInfo di)
 {
     sprintf(filename,"./logs/%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X_logs.csv",di.devEui[0],di.devEui[1],di.devEui[2],di.devEui[3],di.devEui[4],di.devEui[5],di.devEui[6],di.devEui[7]);
+}
+
+/*!
+ *	@brief
+ *	@param
+ * 	@param
+ * 	@param
+ * 	@retval
+ */
+void i2cParse(deviceInfo *di, char *ch, char *buff)
+{
+	char bf[2];
+	bf[0] = buff[0];
+	bf[1] = '\0';
+	di->uartPort = (int)strtol(bf, NULL, 10);
+	strncpy(ch,&buff[1],1);
 }

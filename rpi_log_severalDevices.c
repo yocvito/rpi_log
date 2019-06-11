@@ -34,7 +34,7 @@ deviceInfo devInfArr[NB_MIDDLE_BOARD][NB_MB_UART_PORT] = { 0 };
 /*!
  *	Buffers de reception
  */
-char rx_buffer = 0;
+char ch_buffer = 0;
 char str_buffer[MAX_BUFFER_SIZE];
 
 /*!
@@ -58,6 +58,7 @@ int main(int argc, char **argv)
 {
     time_t t;
     char date[20];
+    char rx_buff[2];
 
     //----- OPEN THE I2C BUS -----
     char *filename = (char *)"/dev/i2c-1";
@@ -97,9 +98,11 @@ int main(int argc, char **argv)
                 //read a line
                 while(true)
                 {
-                    if (read(file_i2c, &rx_buffer, 1) > 0)
+                    if (read(file_i2c, rx_buff, 2) > 0)
                     {
-                        if(rx_buffer == '\r' || rx_buffer == '\n')
+                        i2cParse(&devInfArr[index_mb][index_s], &ch_buffer, rx_buff);
+
+                        if(ch_buffer == '\r' || ch_buffer == '\n')
                         {
                             //si la chaine est vide (e.g : si elle contient uniquement un \r ou \n)
                             if(strlen(str_buffer) <= 0)
@@ -128,7 +131,7 @@ int main(int argc, char **argv)
                                 {
                                     //on vérifie si le fichier est vide
                                     if(ftell(file_csv_current) == 0)
-                                        fprintf(file_csv_current,"Timestamp; MiddleBoard Address; Log\r\n");
+                                        fprintf(file_csv_current,"Timestamp; MiddleBoard Address; Uart Port on MB; Log\r\n");
                                     
                                     //on génère le timestamp
                                     time(&t);
@@ -136,9 +139,9 @@ int main(int argc, char **argv)
 
                                     //on écrit dans le fichier de log
 #if DEBUG == 1
-                                    fprintf(stdout,"%s; 0x%02X; %s\r\n",date,devInfArr[index_mb][index_s].i2cAddr,str_buffer);
+                                    fprintf(stdout,"%s; 0x%02X; %d; %s\r\n",date,devInfArr[index_mb][index_s].i2cAddr,devInfArr[index_mb][index_s].uartPort,str_buffer);
 #endif
-                                    fprintf(file_csv_current,"%s; 0x%02X; %s\r\n",date,devInfArr[index_mb][index_s].i2cAddr,str_buffer);
+                                    fprintf(file_csv_current,"%s; 0x%02X; %d; %s\r\n",date,devInfArr[index_mb][index_s].i2cAddr,devInfArr[index_mb][index_s].uartPort,str_buffer);
 
                                     //fermeture du fichier de log
                                     fclose(file_csv_current);
@@ -151,10 +154,10 @@ int main(int argc, char **argv)
                         else
                         {
                             //concaténation de la chaine str_buffer avec le caractère recu en i2c
-                            strncat(str_buffer, &rx_buffer, 1);
+                            strncat(str_buffer, &ch_buffer, 1);
                         }
                     }
-                    else
+                    else if(strlen(str_buffer) == 0)
                     {
                         break;
                     }                   	                                           
