@@ -13,12 +13,12 @@
  *  le capteur sur la board intermédiaire. Dans ce cas là, il faudra implémenter ici aussi 
  *  le port uart]
  */
-typedef struct 
+typedef struct deviceInfo_t
 {
 	int i2cAddr;
 	unsigned char devEui[8];
 	int uartPort;
-} deviceInfo ;
+} deviceInfo_t ;
 
 /*!
  *  @brief  Analyse des différents charactères des données de la trame pour reconnaitre ou non le DevEui
@@ -65,10 +65,10 @@ bool isDevEui(char *str)
 
 /*!
  *  @brief  Analyse de l'élément devEui de la structure di afin de savcoir s'il est vide ou non
- *  @param  di      structure de type deviceInfo à analyser
+ *  @param  di      structure de type deviceInfo_t à analyser
  *  @retval boolean
  */
-bool emptyDevEui(deviceInfo di)
+bool emptyDevEui(deviceInfo_t di)
 {
 	bool ret = false;
 	for(int i=0 ; i<8 ; i++)
@@ -82,12 +82,12 @@ bool emptyDevEui(deviceInfo di)
 }
 
 /*!
- *  @brief  Permet de récuperer le devEui contenu dans la chaine str et de le formater une structure de type deviceInfo
+ *  @brief  Permet de récuperer le devEui contenu dans la chaine str et de le formater une structure de type deviceInfo_t
  *  @param  di      structure d'information du capteur
  *  @param  str     chaine de charactères à copier
  *  @retval none
  */
-void devEuiCpy(deviceInfo *di, char *str)
+void devEuiCpy(deviceInfo_t *di, char *str)
 {
 	int j = 0;
 	char buff[3];
@@ -121,28 +121,30 @@ void devEuiCpy(deviceInfo *di, char *str)
 /*!
  * 	@brief  Permet de créer le nom du fichier de log courant
  *      Format du chemin :
- *          "./logs/dev_eui_du_capteur_logs.csv"
+ *          "./logs/devEuiDuCapteur_logs.csv"
  *  @param  filename    chaine de caractère pour acceuillir le chemin du fichier de log
  *  @param  di          strcture d'information du capteur          
  * 	@retval none
  */
-void createDevEuiFilename(char *filename, deviceInfo di)
+void createDevEuiFilename(char *filename, deviceInfo_t di)
 {
     sprintf(filename,"./logs/%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X_logs.csv",di.devEui[0],di.devEui[1],di.devEui[2],di.devEui[3],di.devEui[4],di.devEui[5],di.devEui[6],di.devEui[7]);
 }
 
 /*!
- *	@brief
- *	@param
- * 	@param
- * 	@param
- * 	@retval
+ *	@brief	Permet de décomposer les 2 caractères reçus 
+ *	@param	di		structure d'information du capteur dont l'élément uartPort va recevoir le premier caractère
+ * 	@param	ch		adresse du caractère recevant le deuxième caractère
+ * 	@param	buff	buffer contenant les 2 caractères
+ * 	@schem		buff	|	car1	|	 car2	|
+ * 							 |			  |
+ * 							 V			  |
+ * 		di->uartPort	|  car1-'0' |	  |				 
+ * 		ch				|	 car2	|   <--	
+ * 	@retval	none
  */
-void i2cParse(deviceInfo *di, char *ch, char *buff)
+void i2cParse(deviceInfo_t *di, char *ch, char *buff)
 {
-	char bf[2];
-	bf[0] = buff[0];
-	bf[1] = '\0';
-	di->uartPort = (int)strtol(bf, NULL, 10);
-	strncpy(ch,&buff[1],1);
+	di->uartPort = atoi(&buff[1]);		//on convertie le premier caractère en entier
+	*ch = buff[0];		
 }

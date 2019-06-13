@@ -34,7 +34,7 @@ char str_buffer[MAX_BUFFER_SIZE] = { 0 };
 /*!
  *	Structure d'information du device
  */
-deviceInfo devInfo = {0};
+deviceInfo_t devInfo = {0};
 
 int main(int argc, char **argv)
 {
