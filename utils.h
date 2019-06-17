@@ -4,6 +4,10 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <termios.h>
+
+#define MAX_I2C_ADDR	(0x77-0x08)
+#define MAX_UART_PORT	6
 
 /*!
  *	Structure définissant diverses informations concernants un capteur à savoir :
@@ -147,4 +151,91 @@ void i2cParse(deviceInfo_t *di, char *ch, char *buff)
 {
 	di->uartPort = atoi(&buff[1]);		//on convertie le premier caractère en entier
 	*ch = buff[0];		
+}
+
+/*!
+ *	@brief	Permet de calculer la tailler d'un tableau d'entier 
+ * 	ATTENTION : Fonctionne uniquement si pas de valeurs vide en pleins milieu du tableau
+ *	@param	p	pointeur vers le premier element du tableau
+ */
+size_t getNbElements(int *p)
+{
+	size_t count = 0;
+	while(*p != '\0')
+	{
+		count++;
+		p++;
+	}
+	return count;
+}
+
+/*!
+ *	@brief	Permet libérer complètement le flux d'entrée standard
+ *	@retval	none
+ */
+void inflush ( void )
+{
+  int ch;
+
+  do
+    ch = fgetc ( stdin ); 
+  while ( ch != EOF && ch != '\n' ); 
+
+  clearerr ( stdin );
+}
+
+/*!
+ *	@brief	Affiche le menu de configuration	
+ * 	@param	tab	Tableau d'adresses i2c à configurer
+ * 	@retval	none
+ */
+void configMenu(int *tab)
+{
+	int nb_mb = 0;						//nombre middle board
+	int nb_up = 0;						//nombre uart port
+	char *end;
+	char buf[3];
+
+	system("clear");
+
+	printf("###### ===== Configuration système de log - INVISSYS ===== ######\r\n\r\n");
+
+	printf("Nombres de boards intermédiaires :\t");
+	scanf("%d",&nb_mb);
+	printf("\r\n");
+
+	printf("Adresses en hexadecimal - format = XX (faire suivre les adresses i2c): \r\n");
+	
+	for(int i=0, *p = tab ; i<nb_mb ; i++, p++)
+	{
+		printf("\t-> ");
+		scanf("%s",buf);
+		*p = (int)strtol(buf,&end,16);
+		if( (strlen(buf) > 2) || (*p > 119) || (*p < 8))
+		{
+			printf("Suivre le format (XX) et ne pas dépasser 0x77\r\n");
+			i--;
+			continue;
+		}
+	}
+
+	printf("Nombres de ports uart par board :\t");
+	scanf("%d",&nb_up);
+	printf("\r\n");
+
+	printf("Appuyer sur [ENTRER] pour commencer . . .");
+
+	inflush();
+
+	while(getchar() != 10) {}
+
+	system("clear");
+
+    printf("###### ===== INVISSYS LOG RECUP ===== ######\r\n\r\n");
+    printf("NUMBER OF SENSORS : %d\r\n", (nb_mb * nb_up));
+    printf("NUMBER OF MIDDLE BOARDS : %d\r\n", nb_mb);
+    printf("I2C ADDRESS OF BOARDS : \r\n");
+    for (int i = 0, *p=tab ; i < getNbElements(tab); i++, p++)
+        printf("\t0x%02X\r\n", *p);
+    printf("###### ============================== ######\r\n\r\n");
 }
