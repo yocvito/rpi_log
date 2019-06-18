@@ -7,7 +7,6 @@
 #include "utils.h"
 
 #define MAX_BUFFER_SIZE 100
-#define DEBUG 1
 
 int main(int argc, char **argv)
 {
@@ -15,6 +14,8 @@ int main(int argc, char **argv)
     /**************** DECLARATION DES VARIABLES ****************/
     /***********************************************************/
 
+    //variables de debug, pas une variable de préprocesseur car l'utilisateur peut choisir si oui ou non il veut du debug
+    bool debug = false;
 
     //Descripteur de fichier du bus i2c
     int file_i2c;
@@ -50,7 +51,7 @@ int main(int argc, char **argv)
     /****************************************************/
 
     //----- AFFICHAGE DU MENU DE PARAMETRAGE -----
-    configMenu(devices_addr);
+    configMenu(devices_addr, &debug);
 
     //----- OUVERTURE DU BUS I2C -----
     char *filename = (char *)"/dev/i2c-1";
@@ -124,12 +125,12 @@ int main(int argc, char **argv)
                                 strftime(date, sizeof(date), "%d/%m/%Y %H:%M:%S", localtime(&t));
 
                                 //on écrit dans le fichier de log
-#if DEBUG == 1
-                                fprintf(stdout, "%s; 0x%02X; %d; %s\r\n", date, devInfArr[index_mb][index_s].i2cAddr, devInfArr[index_mb][index_s].uartPort, str_buffer);
-#endif
+                                if(debug)
+                                {
+                                    fprintf(stdout, "%s; 0x%02X; %d; %s\r\n", date, devInfArr[index_mb][index_s].i2cAddr, devInfArr[index_mb][index_s].uartPort, str_buffer);
+                                    fflush(stdout);
+                                }
                                 fprintf(file_csv_current, "%s; 0x%02X; %d; %s\r\n", date, devInfArr[index_mb][index_s].i2cAddr, devInfArr[index_mb][index_s].uartPort, str_buffer);
-
-                                fflush(stdout);
 
                                 //fermeture du fichier de log
                                 fclose(file_csv_current);

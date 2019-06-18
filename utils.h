@@ -189,7 +189,7 @@ void inflush ( void )
  * 	@param	tab	Tableau d'adresses i2c à configurer
  * 	@retval	none
  */
-void configMenu(int *tab)
+void configMenu(int *tab, bool *debug)
 {
 	int nb_mb = 0;						//nombre middle board
 	int nb_up = 0;						//nombre uart port
@@ -199,6 +199,27 @@ void configMenu(int *tab)
 	system("clear");
 
 	printf("###### ===== Configuration système de log - INVISSYS ===== ######\r\n\r\n");
+
+	char ch = 0;
+	printf("Voulez-vous activer l'affichage console (y or n) ? ");
+	while( 1 ) 
+	{
+		system ("/bin/stty raw");
+		ch = getchar();
+		system ("/bin/stty cooked");
+		if( ch == 'n' || ch == 'y' )
+			break;
+		else
+			printf("\b");
+		
+	}
+
+	if(ch == 'y')
+		*debug = true;
+	else
+		*debug = false;
+	
+	printf("\r\n\r\n");
 
 	printf("Nombres de boards intermédiaires :\t");
 	scanf("%d",&nb_mb);
