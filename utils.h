@@ -157,6 +157,7 @@ void i2cParse(deviceInfo_t *di, char *ch, char *buff)
  *	@brief	Permet de calculer la tailler d'un tableau d'entier 
  * 	ATTENTION : Fonctionne uniquement si pas de valeurs vide en pleins milieu du tableau
  *	@param	p	pointeur vers le premier element du tableau
+ *	@retval size_t
  */
 size_t getNbElements(int *p)
 {
